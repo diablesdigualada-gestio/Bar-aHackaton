@@ -173,8 +173,9 @@ Learned tuned uses the decoder settings selected within each training fold.
 | Sample Game 3 | 0.5876 | 0.8944 | 0.5511 | 0.9092 | 0.6283 | 0.9217 |
 | Mean | 0.5971 | 0.8747 | 0.5531 | 0.8829 | 0.6450 | 0.8963 |
 
-We submit `EMISSIONS = "learned"`. With the tuned decoder, learned emissions scored 0.6450 mean
-spellF1 versus 0.5971 for hand emissions and improved spellF1 on all three games. For the final
+On the open samples, with the tuned decoder, learned emissions scored 0.6450 mean spellF1
+versus 0.5971 for hand emissions and improved spellF1 on all three games. Even so, the submission
+uses hand emissions; the reason is in the section "Why hand emissions by default". For the final
 model, we ranked decoder settings by their mean training scores across the folds. The selected
 settings use a team switch cost of 18, D entry and exit costs of 9 and 8, and minimum durations
 of 45 frames for H and A and 30 frames for D. Smart Tagging scores are added at inference.
