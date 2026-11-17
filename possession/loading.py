@@ -27,12 +27,18 @@ GROUP_SEP = ";"
 
 
 def paths(data_dir, game=config.GAME, source=config.SOURCE):
-    """Paths of the three files we use. Same names as games.py in the official repository."""
+    """Paths of the files we use. Same names as games.py in the official repository.
+
+    The pipeline needs meta, raw and tagging. Video and homography are only read by
+    tools/visualize.py.
+    """
     base = os.path.join(data_dir, source, "{}_{}".format(game, source))
     return {
         "meta": base + "_atd.xml",
         "raw": base + "_atd.txt",
         "tagging": base + "_smart_tagging.xml",
+        "homography": base + "_homography.csv",
+        "video": base + ".mp4",
     }
 
 
@@ -139,6 +145,17 @@ def load_match(data_dir, cache_dir=None):
         np.savez(cache, ball=ball, players=players, speed=speed)
     match.update(ball=ball, players=players, speed=speed)
     return match
+
+
+def read_homography(path):
+    """(n_frames, 3, 3) pitch to image homographies, one per video frame.
+
+    One row per frame: the frame number, then the nine matrix entries row by row. The matrix maps
+    normalised pitch coordinates (0..1, the units of the raw ATD) to video pixels. Rows where the
+    camera could not be solved are NaN.
+    """
+    data = np.genfromtxt(path, delimiter=",", skip_header=1)
+    return data[:, 1:10].reshape(-1, 3, 3)
 
 
 def read_tagging(path, fps=config.FPS):

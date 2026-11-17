@@ -1,0 +1,4 @@
+# Optional: only for tools/visualize.py. The submission needs requirements.txt alone.
+-r requirements.txt
+opencv-python>=4.8
+matplotlib>=3.7

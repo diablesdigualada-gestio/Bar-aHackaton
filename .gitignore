@@ -6,3 +6,10 @@ web/public/match.json
 *.npz
 __pycache__/
 .venv/
+
+# Local video checks and older working folders: they hold match video or labels, never commit
+outputs/
+submissions/
+*.mp4
+*.pdf
+PENDENTS_*.txt

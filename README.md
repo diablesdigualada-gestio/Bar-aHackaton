@@ -59,11 +59,26 @@ npm install
 npm run dev
 ```
 
+## Video check
+
+Overlay our labels on the tactical video to see where the pipeline goes wrong. Optional extras:
+
+```bash
+pip install -r requirements-viz.txt
+python tools/visualize.py clip --start 11185 --seconds 60     # outputs/clip_11185_60s.mp4
+python tools/visualize.py timeline                            # outputs/timeline.png
+```
+
+Players are projected with the per-frame homography, the ball is yellow and the player we say
+controls it gets a ring. `--gt <csv>` draws a frame,label file next to ours (the public 5-minute
+window, for looking only). `outputs/` is gitignored: the clips contain match video and must stay
+local.
+
 ## Layout
 
 | Path | What | Owner |
 |---|---|---|
-| `possession/loading.py` | raw ATD reader, metadata, Smart Tagging | Roger |
+| `possession/loading.py` | raw ATD reader, metadata, Smart Tagging, homography | Roger |
 | `possession/ball.py` | ball gaps, ball speed, out of pitch | Roger |
 | `possession/features.py` | distance and time to ball, control evidence | Jordi |
 | `possession/viterbi.py` | explicit-duration HMM decoder | Jordi |
@@ -71,6 +86,7 @@ npm run dev
 | `possession/deadball.py` | dead-ball evidence, tagging priors | Carles |
 | `possession/output.py` | submission writer, spells, viewer export | Carles |
 | `run.py` | end-to-end command | all |
+| `tools/visualize.py` | video overlay clips and timeline | Roger |
 | `web/` | viewer | Carles |
 
 ## Data
