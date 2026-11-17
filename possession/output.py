@@ -24,6 +24,7 @@ def labels_from_states(states):
 
 
 def graded_mask(n):
+    """Boolean mask of length n, True on the frames the organisers score (config.HALVES, inclusive)."""
     mask = np.zeros(n, dtype=bool)
     for first, last in config.HALVES:
         mask[first:last + 1] = True

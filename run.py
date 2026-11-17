@@ -41,6 +41,10 @@ def frame_features(match):
 
 
 def hand_emissions(frame, tag_dead=0.0, push=0.0):
+    """(n, 3) log-scores from the hand-built evidence.
+
+    Control evidence goes to H (positive) or A (negative), the four dead-ball signals plus the Smart
+    Tagging restarts go to D, and push is the weak tagging nudge towards the team in possession."""
     dead = deadball.dead_evidence(frame["seen"], frame["out"], frame["mean_player_speed"],
                                   frame["active_players"])
     return viterbi.emissions(frame["control"], dead + tag_dead, push)
@@ -80,6 +84,7 @@ def build_states(match, events):
 
 
 def main():
+    """Command line entry point: load, decode, write the CSV and optionally the viewer JSON."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--data", default=os.environ.get("MTAH_DATA_DIR",
                                                          os.path.join(HERE, "data")))

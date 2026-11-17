@@ -60,6 +60,7 @@ def occlude(ball, live, rng, share=None, shortest=None, longest=None):
 
 
 def log_softmax(scores):
+    """Row-wise log of the softmax, shifted by the row maximum so large scores never overflow."""
     shifted = scores - scores.max(axis=1, keepdims=True)
     return shifted - np.log(np.exp(shifted).sum(axis=1, keepdims=True))
 
@@ -84,15 +85,18 @@ def fit(matrix, labels):
 
 
 def log_probabilities(matrix, model):
+    """(n, 3) log P(H, A, D) per frame: standardise with the stored scaling, then apply the weights."""
     x = (matrix - model["mean"]) / model["scale"]
     return log_softmax(x @ model["weights"] + model["bias"])
 
 
 def save(model, path=WEIGHTS_PATH):
+    """Write a fitted model (arrays of numbers) as indented JSON, so it can be diffed and committed."""
     values = {name: array.tolist() for name, array in model.items()}
     path.write_text(json.dumps(values, indent=2) + "\n", encoding="utf-8")
 
 
 def load(path=WEIGHTS_PATH):
+    """Read a model written by save() back into float64 numpy arrays."""
     values = json.loads(path.read_text(encoding="utf-8"))
     return {name: np.array(array, dtype=np.float64) for name, array in values.items()}

@@ -278,6 +278,7 @@ def spell_f1(truth, prediction):
 
 
 def scores(truth, prediction, official):
+    """(spellF1, macroF1) of a prediction, with the official scorer when available, else the local copy."""
     if official is not None:
         spell_score = official.spell_scores(truth, prediction, [(0, len(truth))])["mean_f1"]
         matrix = official.scored_confusion(official.confusion(truth, prediction))
@@ -290,6 +291,7 @@ def scores(truth, prediction, official):
 
 
 def current_settings():
+    """The calibrated values currently in config, in the shape the grid search uses."""
     return {
         "CONTROL_RADIUS": config.CONTROL_RADIUS,
         "CONTROL_WEIGHT": config.CONTROL_WEIGHT,
@@ -302,6 +304,7 @@ def current_settings():
 
 
 def switch_costs(team_cost, dead_costs):
+    """Full transition cost table from one team switch cost and a (enter D, leave D) pair."""
     h, a, d = config.H, config.A, config.D
     enter_dead, leave_dead = dead_costs
     return {(h, a): team_cost, (a, h): team_cost,
@@ -310,6 +313,9 @@ def switch_costs(team_cost, dead_costs):
 
 
 def predict(match, settings):
+    """Decode one match with the hand emissions under a candidate set of settings.
+
+    config is patched only inside the call, so a grid search never leaks values into later runs."""
     h, a, d = config.H, config.A, config.D
     duration = settings["TEAM_MIN_DURATION"]
     costs = switch_costs(settings["TEAM_SWITCH_COST"], settings["DEAD_SWITCH_COSTS"])
@@ -321,6 +327,7 @@ def predict(match, settings):
 
 
 def grid_search(match, truth, official):
+    """Score every combination of GRID on one match, best first, plus the current settings as baseline."""
     original = current_settings()
     baseline = scores(truth, predict(match, original), official)
     print("Current config: spellF1 {:.4f}, macroF1 {:.4f}".format(*baseline), flush=True)
@@ -339,6 +346,7 @@ def grid_search(match, truth, official):
 
 
 def hand_grid():
+    """Repeat the original hand calibration on Metrica Sample Game 3 and write tools/calibrated.json."""
     started = time.monotonic()
     match = load_sample(download("metadata.xml"), download("tracking.txt"))
     truth = event_labels(download("events.json"), match["names"], len(match["ball"]))
@@ -369,6 +377,7 @@ def hand_grid():
 
 
 def load_game(game):
+    """Download (once, cached) one Metrica open sample and derive per-frame H/A/D labels from its events."""
     if game == GAME:
         match = load_sample(download("metadata.xml"), download("tracking.txt"))
         events = download("events.json")
@@ -382,6 +391,7 @@ def load_game(game):
 
 
 def learned_prediction(emissions, settings):
+    """Decode learned log-probabilities with a (team cost, dead costs, durations) setting."""
     team_cost, dead_costs, (team_duration, dead_duration) = settings
     durations = {config.H: team_duration, config.A: team_duration, config.D: dead_duration}
     return viterbi.decode(emissions, durations, switch_costs(team_cost, dead_costs))
@@ -398,10 +408,14 @@ def tune_decoder(emissions, truths, official):
 
 
 def fit_games(matrices, truths):
+    """Fit one logistic model on the frames of several games pooled together."""
     return learned.fit(np.concatenate(matrices), np.concatenate(truths))
 
 
 def leave_one_out():
+    """Hand against learned emissions, each game scored by a model fitted on the other two.
+
+    Writes possession/learned_weights.json with the model fitted on all three games."""
     official = load_official_scorer()
     print("Scorer: {}".format("official" if official is not None else "local"), flush=True)
     matrices, truths, hand_scores = [], [], []
@@ -478,6 +492,7 @@ def robust():
         truths.append(truth)
 
     def hand(frame):
+        """Decode a game with the hand emissions and the calibrated decoder settings."""
         return viterbi.decode(run.hand_emissions(frame), config.MIN_DURATION, config.SWITCH_COST)
 
     rows, training_results = [], []
@@ -525,6 +540,7 @@ def robust():
 
 
 def main():
+    """Command line entry point: --hand-grid, --robust, or the default leave-one-game-out run."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--hand-grid", action="store_true", help="repeat the Game 3 hand grid")
     parser.add_argument("--robust", action="store_true",

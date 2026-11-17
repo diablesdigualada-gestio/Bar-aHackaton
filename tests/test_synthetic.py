@@ -21,6 +21,9 @@ FPS = config.FPS
 
 
 def synthetic_match():
+    """40 s invented match: H carries, passes, A intercepts and carries, kicks it out, walk, H restarts.
+
+    Returns the same dict shape as loading.load_match, so the real pipeline runs on it unchanged."""
     n = FPS * 40
     # Six actors near the ball plus sixteen bystanders far from it, so the match looks live.
     slots = 22
@@ -57,6 +60,7 @@ def synthetic_match():
 
 
 def compress(states):
+    """Collapse runs of equal states into one letter each: [H, H, A, A, D] becomes 'HAD'."""
     keep = [states[0]]
     for s in states[1:]:
         if s != keep[-1]:
@@ -65,6 +69,7 @@ def compress(states):
 
 
 def test_decoder():
+    """The full pipeline must find the possessions in order H, A, D, H."""
     states = build_states(synthetic_match(), [])
     sequence = compress(states)
     print("decoded sequence:", sequence)
@@ -72,6 +77,7 @@ def test_decoder():
 
 
 def test_reader():
+    """The raw ATD reader converts 0..1 coordinates to metres and keeps NaN for missing values."""
     lines = ["1:0.5,0.5,1.0;NaN,NaN,NaN:0.5,0.5,0.0\n", "2:0.6,0.4,2.0;0.1,0.1,0.5:NaN,NaN,NaN\n"]
     with tempfile.TemporaryDirectory() as tmp:
         path = os.path.join(tmp, "raw.txt")
@@ -85,6 +91,7 @@ def test_reader():
 
 def test_min_duration():
     # A 5-frame blip of A inside H must not survive the 15-frame minimum.
+    """A blip shorter than the minimum duration must be absorbed by the surrounding possession."""
     scores = np.zeros((200, 3), dtype=np.float32)
     scores[:, config.H] = 1.0
     scores[100:105, config.A] = 3.0

@@ -76,6 +76,7 @@ def controller(ball, players, team_of_slot, label):
 
 
 def draw_strip(cv2, img, labels, frame, y0, h, title, span=30 * FPS):
+    """Bar of labels 30 s either side of the current frame, with a white cursor in the middle."""
     x0 = 20
     width = img.shape[1] - 2 * x0
     xs = np.linspace(frame - span, frame + span, width).astype(int)
@@ -89,6 +90,7 @@ def draw_strip(cv2, img, labels, frame, y0, h, title, span=30 * FPS):
 
 
 def draw_minimap(cv2, img, ball, players, team_of_slot, slot, x0, y0, w=315, h=204):
+    """Small top-down pitch in the corner with every player, the ball and a ring on the controller."""
     length, width = config.PITCH
     overlay = img.copy()
     cv2.rectangle(overlay, (x0, y0), (x0 + w, y0 + h), (40, 110, 40), -1)
@@ -103,6 +105,7 @@ def draw_minimap(cv2, img, ball, players, team_of_slot, slot, x0, y0, w=315, h=2
         cv2.rectangle(img, (bx, box_top), (bx + box_w, box_bottom), WHITE, 1)
 
     def to_px(x, y):
+        """Metres on the pitch to pixels inside the mini pitch rectangle."""
         return int(x0 + x / length * w), int(y0 + y / width * h)
 
     for s in range(len(players)):
@@ -117,12 +120,17 @@ def draw_minimap(cv2, img, ball, players, team_of_slot, slot, x0, y0, w=315, h=2
 
 
 def label_box(cv2, img, x, text, label):
+    """Coloured box in the top banner with a label written in plain words."""
     cv2.rectangle(img, (x, 12), (x + 500, 60), BGR.get(label, BGR["X"]), -1)
     cv2.putText(img, text, (x + 12, 46), cv2.FONT_HERSHEY_SIMPLEX, 0.95, (255, 255, 255), 2,
                 cv2.LINE_AA)
 
 
 def clip(csv, data_dir, cache_dir, start, seconds, out, scale, gt_path=None):
+    """Write an MP4 of the tactical video from start for seconds, with our labels drawn on top.
+
+    Reads the video frame by frame with OpenCV, projects tracking with the per-frame homography and
+    writes to out. Returns the output path."""
     import cv2
 
     labels = read_labels(csv)
@@ -195,6 +203,7 @@ def clip(csv, data_dir, cache_dir, start, seconds, out, scale, gt_path=None):
 
 
 def timeline(csv, out, gt_path=None):
+    """Write a PNG with one colour strip per half (and the ground truth window when gt_path is given)."""
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -240,6 +249,7 @@ def timeline(csv, out, gt_path=None):
 
 
 def main():
+    """Command line entry point: the clip and timeline subcommands."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--csv", default=os.path.join(ROOT, "submission", "diables.csv"))
     parser.add_argument("--gt", default=None, help="optional frame,label CSV to draw alongside")

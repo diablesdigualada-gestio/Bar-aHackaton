@@ -17,6 +17,7 @@ from . import config
 
 
 def sigmoid(x):
+    """Logistic function 1 / (1 + e^-x), used to turn distances and speeds into soft 0..1 scores."""
     return 1.0 / (1.0 + np.exp(-x))
 
 
