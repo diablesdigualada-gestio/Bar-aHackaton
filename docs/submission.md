@@ -13,7 +13,7 @@ before the deadline is the one scored, and it can be edited.
 | Team members names | Roger, Jordi, Carles i Laia | to fill in |
 | Possession file (.csv) | `entregar/Fireware.csv`, a copy of `submission/diables.csv` (local only) | ready, validated |
 | Public code repository URL | https://github.com/diablesdigualada-gestio/Bar-aHackaton | public |
-| Short technical document | `entregar/Fireware.md`, a copy of `docs/diables.md` | ready |
+| Short technical document | `entregar/Fireware.pdf`, made from `docs/diables.md` | ready |
 
 A Google account is needed to upload the files.
 

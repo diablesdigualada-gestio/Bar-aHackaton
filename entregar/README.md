@@ -9,7 +9,7 @@ registered participants). The last response before the deadline counts.
 | Team members names | Roger, Jordi, Carles i Laia | |
 | Possession file (.csv) | the submission CSV, named after the team | `Fireware.csv` (local only, see below) |
 | Public code repository URL | https://github.com/diablesdigualada-gestio/Bar-aHackaton | `repository_url.txt` |
-| Short technical document | the technical document, named after the team | `Fireware.md` |
+| Short technical document | the technical document, named after the team | `Fireware.pdf` (same text as `Fireware.md`) |
 
 ## The CSV is not on GitHub on purpose
 

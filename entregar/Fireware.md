@@ -1,6 +1,6 @@
-# Diables: ball possession from tracking with a duration-aware decoder
+# Fireware: ball possession from tracking with a duration-aware decoder
 
-Team Diables. More Than a Hack 2027, Phase 1.
+Team Fireware: Roger, Jordi, Carles and Laia. More Than a Hack 2027, Phase 1.
 
 ## 1. Idea
 
@@ -65,8 +65,8 @@ attacking team. Weak on purpose: they are phases, not possessions, and they are 
 
 Three states, H, A, D. Each state is expanded into a left-to-right chain of substates,
 the classical explicit-duration HMM construction. A state must walk
-its chain before a transition. The calibrated hand settings require 1.2 s for possession and
-0.8 s for stoppages. Switching between teams costs 7 units of log-score, entering D costs 3,
+its chain before a transition. The submitted hand settings require 1.8 s for possession and
+0.8 s for stoppages (see "Final decoder setting"). Switching between teams costs 7 units of log-score, entering D costs 3,
 and leaving D costs 2.5. Viterbi finds the best segmentation in one pass.
 
 With hand emissions, H gets +control, A gets -control, and D gets the dead-ball score.
