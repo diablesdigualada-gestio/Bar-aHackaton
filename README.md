@@ -122,4 +122,4 @@ The match data is not in this repository and must not be: it is gated by the org
 
 ## Team
 
-Jordi Balsells, Roger, Carles. Diables d'Igualada.
+Team Fireware: Roger, Jordi Balsells, Carles and Laia. Diables d'Igualada.

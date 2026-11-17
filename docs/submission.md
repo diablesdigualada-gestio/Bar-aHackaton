@@ -1,6 +1,6 @@
 # Submission checklist
 
-Team Diables. More Than a Hack 2027, Phase 1. Deadline: November 17, 2026.
+Team Fireware (Roger, Jordi, Carles, Laia). More Than a Hack 2027, Phase 1. Deadline: November 17, 2026.
 
 One Google Form per team (link sent by email to registered participants). The last response
 before the deadline is the one scored, and it can be edited.
@@ -9,10 +9,11 @@ before the deadline is the one scored, and it can be edited.
 
 | Field | What we send | Status |
 |---|---|---|
-| Team Name | `Diables`, exactly as in every member's registration | to fill in |
-| Possession file | `submission/diables.csv` (generated locally, never in the repo) | ready, validated |
+| Team name | `Fireware`, exactly as in every member's registration | to fill in |
+| Team members names | Roger, Jordi, Carles i Laia | to fill in |
+| Possession file (.csv) | `entregar/Fireware.csv`, a copy of `submission/diables.csv` (local only) | ready, validated |
 | Public code repository URL | https://github.com/diablesdigualada-gestio/Bar-aHackaton | public |
-| Short technical document | `docs/diables.md` (named after the team, as required) | ready |
+| Short technical document | `entregar/Fireware.md`, a copy of `docs/diables.md` | ready |
 
 A Google account is needed to upload the files.
 
