@@ -9,18 +9,54 @@ import numpy as np
 from . import config
 
 WEIGHTS_PATH = Path(__file__).with_name("learned_weights.json")
+ROBUST_WEIGHTS_PATH = Path(__file__).with_name("robust_weights.json")
+
+# Features that only exist when the ball is tracked. The robust model never sees whether they are
+# missing, so "no ball" cannot become a shortcut to D.
+BALL_FEATURES = ("d_home", "d_away", "t_home", "t_away", "ball_speed")
 
 
-def feature_matrix(frame):
-    """Build the same bounded feature columns for training and prediction."""
+def feature_matrix(frame, robust=False):
+    """Build the same bounded feature columns for training and prediction.
+
+    robust drops every ball visibility signal: no seen column, no missing flags for ball features,
+    and a missing ball feature is filled with a neutral value (far for distances and times, a
+    typical live speed for the ball) instead of zero.
+    """
     columns = [frame["control"]]
     for name, limit in config.LEARNED_CLIPS.items():
         values = frame[name]
         missing = np.isnan(values)
+        if robust and name in BALL_FEATURES:
+            fill = config.ROBUST_BALL_SPEED_FILL if name == "ball_speed" else limit
+            columns.append(np.where(missing, fill, np.clip(values, 0.0, limit)))
+            continue
         columns.append(np.where(missing, 0.0, np.clip(values, 0.0, limit)))
         columns.append(missing)
-    columns.extend((frame["out"], frame["active_players"], frame["seen"]))
+    columns.extend((frame["out"], frame["active_players"]))
+    if not robust:
+        columns.append(frame["seen"])
     return np.column_stack(columns).astype(np.float64)
+
+
+def occlude(ball, live, rng, share=None, shortest=None, longest=None):
+    """Copy of ball with simulated tracker dropouts during live play.
+
+    Runs of shortest..longest frames are hidden until share of the live frames is missing, the
+    way the real tracker loses the ball behind players. Dead frames are never touched, so the
+    model cannot learn that a missing ball means a stoppage.
+    """
+    share = config.OCCLUSION_SHARE if share is None else share
+    shortest = config.OCCLUSION_MIN if shortest is None else shortest
+    longest = config.OCCLUSION_MAX if longest is None else longest
+    hidden = np.zeros(len(ball), dtype=bool)
+    target = share * live.sum()
+    while (hidden & live).sum() < target:
+        start = int(rng.integers(len(ball)))
+        hidden[start:start + int(rng.integers(shortest, longest + 1))] = True
+    out = ball.copy()
+    out[hidden & live] = np.nan
+    return out
 
 
 def log_softmax(scores):

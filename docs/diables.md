@@ -211,3 +211,31 @@ the official baseline makes. That is a change of data distribution we cannot mea
 labels on the challenge match, which we are not allowed to use. So the submission uses the hand
 emissions, where a missing ball adds almost nothing, and the learned model stays available with
 `EMISSIONS = "learned"` in `possession/config.py`.
+
+## Robust learned emissions
+
+To remove that shortcut we trained a second logistic model with no ball visibility signal at all:
+no `seen` column, no missing flags for ball features, and a missing ball feature filled with a
+neutral value (far for distances and arrival times, 5 m/s for ball speed). It is trained only on
+copies of the open games where the ball is hidden in runs of 5 to 60 frames until 35% of the live
+frames are missing, which is what the tracker does in the challenge match. Dead frames are never
+hidden, so a missing ball carries no information about stoppages.
+
+The rule we fixed before looking at any result: the robust model goes into the submission only if
+its mean held-out spellF1 beats the hand emissions both on the games as delivered and with
+simulated dropouts. Leave one game out, decoder tuned inside each training fold, local copy of the
+spell scorer (`python tools/calibrate.py --robust`, full numbers in `tools/robust.json`):
+
+| Scored game | Clean hand | Clean robust | Occluded hand | Occluded robust |
+|---|---:|---:|---:|---:|
+| Sample Game 1 | 0.5928 | 0.5931 | 0.5228 | 0.4179 |
+| Sample Game 2 | 0.6109 | 0.6373 | 0.5264 | 0.3805 |
+| Sample Game 3 | 0.5876 | 0.6067 | 0.5051 | 0.3521 |
+| Mean | 0.5971 | 0.6123 | 0.5181 | 0.3835 |
+
+The robust model is better on clean tracking and clearly worse with dropouts, so it fails the
+rule and the submission keeps the hand emissions. Long hidden stretches give the robust model a
+flat feature vector, and its class prior then outweighs the decoder, while the hand emissions add
+almost nothing there and let the duration model carry the possession. The model and its decoder
+settings are in `possession/robust_weights.json` and can be selected with
+`EMISSIONS = "robust"`.

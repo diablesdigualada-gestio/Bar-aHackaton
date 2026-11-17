@@ -62,7 +62,7 @@ PHASE_TEAM_WEIGHT = 0.03       # tagged phases (BUILD UP, PROGRESSION...) give a
 USE_PHASES = True
 
 # Emissions (Jordi)
-EMISSIONS = "hand"             # safer default, see docs/diables.md "Why hand emissions by default"
+EMISSIONS = "hand"             # "hand", "learned" or "robust", see docs/diables.md for why hand
 # Upper bounds for distance (m), arrival time (s) and speed (m/s) features.
 LEARNED_CLIPS = {
     "d_home": 25.0, "d_away": 25.0,
@@ -75,6 +75,15 @@ LEARNED_INIT_SCALE = 0.01
 LEARNED_STEPS = 200
 LEARNED_STEP_SIZE = 0.2
 LEARNED_L2 = 0.01
+
+# Robust learned emissions (Jordi). The plain learned model leans on "ball not seen" to say D, which
+# is wrong here: the ball is missing on 41% of graded frames, almost always in live play. The robust
+# model drops every visibility signal and trains on Metrica samples with simulated dropouts.
+ROBUST_BALL_SPEED_FILL = 5.0   # m/s, a typical live ball speed: no hint towards control or D
+OCCLUSION_SHARE = 0.35         # share of live frames hidden in training and in the stress test
+OCCLUSION_MIN = 5              # frames, shortest simulated dropout
+OCCLUSION_MAX = 60             # frames, longest simulated dropout (2.4 s)
+OCCLUSION_SEED = 11
 
 # Viterbi (Jordi)
 # Minimum durations in frames. A possession shorter than 0.6 s is a rebound, not a possession.

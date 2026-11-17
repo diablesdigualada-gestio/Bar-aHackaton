@@ -60,6 +60,20 @@ def build_states(match, events):
         scores[:, config.D] += tag_dead
         return viterbi.decode(scores, config.LEARNED_MIN_DURATION, config.LEARNED_SWITCH_COST)
 
+    if config.EMISSIONS == "robust":
+        model = learned.load(learned.ROBUST_WEIGHTS_PATH)
+        team_cost, to_dead, from_dead, team_duration, dead_duration = model.pop("decoder")
+        scores = learned.log_probabilities(learned.feature_matrix(frame, robust=True), model)
+        scores[:, config.H] += push
+        scores[:, config.A] -= push
+        scores[:, config.D] += tag_dead
+        durations = {config.H: int(team_duration), config.A: int(team_duration),
+                     config.D: int(dead_duration)}
+        costs = {(config.H, config.A): team_cost, (config.A, config.H): team_cost,
+                 (config.H, config.D): to_dead, (config.A, config.D): to_dead,
+                 (config.D, config.H): from_dead, (config.D, config.A): from_dead}
+        return viterbi.decode(scores, durations, costs)
+
     raise ValueError("Unknown emission mode: {}".format(config.EMISSIONS))
 
 

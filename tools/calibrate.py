@@ -452,11 +452,88 @@ def leave_one_out():
     print("Wrote {}".format(learned.WEIGHTS_PATH.relative_to(ROOT)))
 
 
+def occluded_match(match, truth, seed):
+    """Same match with simulated ball dropouts during live play."""
+    rng = np.random.default_rng(seed)
+    hidden = dict(match)
+    hidden["ball"] = learned.occlude(match["ball"], truth != config.D, rng)
+    return hidden
+
+
+def robust():
+    """Leave one game out: hand emissions against the robust learned model.
+
+    Training uses occluded copies of the other games only. Each held-out game is scored twice, as
+    delivered and with simulated dropouts. The robust model is selected only if its mean spellF1
+    beats the hand emissions in both conditions.
+    """
+    official = load_official_scorer()
+    print("Scorer: {}".format("official" if official is not None else "local"), flush=True)
+    clean, hidden, truths = [], [], []
+    for k, game in enumerate(GAMES):
+        match, truth = load_game(game)
+        print("{}: {} frames".format(game, len(truth)), flush=True)
+        clean.append(run.frame_features(match))
+        hidden.append(run.frame_features(occluded_match(match, truth, config.OCCLUSION_SEED + k)))
+        truths.append(truth)
+
+    def hand(frame):
+        return viterbi.decode(run.hand_emissions(frame), config.MIN_DURATION, config.SWITCH_COST)
+
+    rows, training_results = [], []
+    for held_out, game in enumerate(GAMES):
+        train = [i for i in range(len(GAMES)) if i != held_out]
+        matrices = [learned.feature_matrix(hidden[i], robust=True) for i in train]
+        model = fit_games(matrices, [truths[i] for i in train])
+        emissions = [learned.log_probabilities(m, model) for m in matrices]
+        results = tune_decoder(emissions, [truths[i] for i in train], official)
+        training_results.append(results)
+        settings = max(results, key=results.get)
+
+        row = []
+        for frame in (clean[held_out], hidden[held_out]):
+            values = learned.log_probabilities(learned.feature_matrix(frame, robust=True), model)
+            row += scores(truths[held_out], hand(frame), official)
+            row += scores(truths[held_out], learned_prediction(values, settings), official)
+        rows.append(row)
+        print("{} decoder: {}".format(game, settings), flush=True)
+
+    mean = np.mean(rows, axis=0)
+    print("\n                 Clean: hand          robust            "
+          "Occluded: hand       robust")
+    for game, row in zip((*GAMES, "Mean"), (*rows, mean)):
+        print("{:14s}   {:.4f} {:.4f}    {:.4f} {:.4f}    {:.4f} {:.4f}    {:.4f} {:.4f}".format(
+            game, *row))
+    wins = mean[2] > mean[0] and mean[6] > mean[4]
+    print("Robust wins clean and occluded: {}".format(wins))
+
+    average = {s: tuple(np.mean([r[s] for r in training_results], axis=0)) for s in LEARNED_GRID}
+    team_cost, (to_dead, from_dead), (team_duration, dead_duration) = max(average,
+                                                                          key=average.get)
+    model = fit_games([learned.feature_matrix(f, robust=True) for f in hidden], truths)
+    model["decoder"] = np.array([team_cost, to_dead, from_dead, team_duration, dead_duration])
+    learned.save(model, learned.ROBUST_WEIGHTS_PATH)
+    report = {"rows": dict(zip((*GAMES, "Mean"), [list(map(float, r)) for r in (*rows, mean)])),
+              "columns": ["clean_hand_spell", "clean_hand_macro", "clean_robust_spell",
+                          "clean_robust_macro", "occluded_hand_spell", "occluded_hand_macro",
+                          "occluded_robust_spell", "occluded_robust_macro"],
+              "robust_wins": bool(wins), "decoder": model["decoder"].tolist()}
+    path = ROOT / "tools" / "robust.json"
+    path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    print("Wrote {} and {}".format(learned.ROBUST_WEIGHTS_PATH.relative_to(ROOT),
+                                   path.relative_to(ROOT)))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--hand-grid", action="store_true", help="repeat the Game 3 hand grid")
-    if parser.parse_args().hand_grid:
+    parser.add_argument("--robust", action="store_true",
+                        help="train and test the robust model with simulated dropouts")
+    args = parser.parse_args()
+    if args.hand_grid:
         hand_grid()
+    elif args.robust:
+        robust()
     else:
         leave_one_out()
 
