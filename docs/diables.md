@@ -239,3 +239,20 @@ flat feature vector, and its class prior then outweighs the decoder, while the h
 almost nothing there and let the duration model carry the possession. The model and its decoder
 settings are in `possession/robust_weights.json` and can be selected with
 `EMISSIONS = "robust"`.
+
+## Final decoder setting
+
+Last change before submitting. The hand emissions were calibrated on Game 3 alone, so we re-ran a
+small decoder grid on all three open games (team switch cost 7, 12 or 18; D entry and exit costs
+3 and 2.5 or 6 and 5; minimum team possession 30 or 45 frames), each game scored as delivered and
+with the simulated dropouts described above. The rule, as before, was to change only if both mean
+spellF1 values improve. One setting changes and passes it: a minimum possession of 45 frames
+(1.8 s) instead of 30, with every cost unchanged.
+
+| Minimum team possession | Mean spellF1, clean | Mean spellF1, with dropouts |
+|---|---:|---:|
+| 30 frames (before) | 0.5971 | 0.5181 |
+| 45 frames (submitted) | 0.6031 | 0.5249 |
+
+Settings with a higher average but a lower clean score (for example D costs 6 and 5) were
+rejected by the rule. The submission uses `MIN_DURATION = {H: 45, A: 45, D: 20}`.

@@ -87,7 +87,7 @@ OCCLUSION_SEED = 11
 
 # Viterbi (Jordi)
 # Minimum durations in frames. A possession shorter than 0.6 s is a rebound, not a possession.
-MIN_DURATION = {H: 30, A: 30, D: 20}  # calibrated on Metrica Sample Game 3
+MIN_DURATION = {H: 45, A: 45, D: 20}  # grid on Metrica games 1 to 3, clean and with dropouts, see docs
 # Cost of switching state. Higher means fewer invented possessions, which spellF1 punishes hard.
 SWITCH_COST = {
     (H, A): 7.0, (A, H): 7.0,
