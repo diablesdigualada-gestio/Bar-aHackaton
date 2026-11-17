@@ -15,6 +15,13 @@ interface MatchFile {
   halves: [number, number][]
   timeline_step: number
   timeline: string
+  tracking?: {
+    step: number
+    team_of_slot: number[]
+    pitch: [number, number]
+    ball: [number, number][]
+    players: [number, number][][]
+  }
 }
 
 const match = ref<MatchFile | null>(null)
@@ -106,6 +113,11 @@ const visibleSpells = computed(() => {
         <p v-if="picked !== null" class="text-sm">
           Frame {{ picked }}, video time {{ clock(picked) }}
         </p>
+      </UCard>
+
+      <UCard v-if="match.tracking">
+        <template #header>Pitch</template>
+        <PitchView :tracking="match.tracking" :fps="match.fps" :jump-to="picked" />
       </UCard>
 
       <UCard>
