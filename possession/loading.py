@@ -76,16 +76,17 @@ def _group_floats(text, n):
         return [np.nan] * n
 
 
-def read_atd(raw_path, n_slots, n_frames=config.N_FRAMES, pitch=config.PITCH):
+def read_atd(raw_path, n_slots, n_frames=config.N_FRAMES, pitch=config.PITCH, has_speed=True):
     """Read the raw file into arrays in metres.
 
     ball     (n_frames, 2)           float32, NaN where there is no ball
     players  (n_frames, n_slots, 2)  float32, NaN where the slot is inactive
-    speed    (n_frames, n_slots)     float32, m/s as delivered
+    speed    (n_frames, n_slots)     float32, m/s as delivered, or NaN when has_speed is false
 
     Frames absent from the file stay all NaN and are treated as gaps.
     """
     length, width = pitch
+    group_size = 3 if has_speed else 2
     ball = np.full((n_frames, 2), np.nan, dtype=np.float32)
     players = np.full((n_frames, n_slots, 2), np.nan, dtype=np.float32)
     speed = np.full((n_frames, n_slots), np.nan, dtype=np.float32)
@@ -100,12 +101,13 @@ def read_atd(raw_path, n_slots, n_frames=config.N_FRAMES, pitch=config.PITCH):
                 continue
 
             groups = parts[1].split(GROUP_SEP)[:n_slots]
-            values = np.array([_group_floats(g, 3) for g in groups], dtype=np.float32)
+            values = np.array([_group_floats(g, group_size) for g in groups], dtype=np.float32)
             k = len(values)
             if k:
                 players[row, :k, 0] = values[:, 0] * length
                 players[row, :k, 1] = values[:, 1] * width
-                speed[row, :k] = values[:, 2]
+                if has_speed:
+                    speed[row, :k] = values[:, 2]
 
             bx, by = _group_floats(parts[2], 2)
             ball[row] = (bx * length, by * width)

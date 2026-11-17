@@ -1,0 +1,31 @@
+{
+  "sample": "Sample_Game_3",
+  "settings": {
+    "CONTROL_RADIUS": 1.6,
+    "CONTROL_WEIGHT": 0.85,
+    "TIME_BLEND": 0.0,
+    "TEAM_SWITCH_COST": 7.0,
+    "DEAD_SWITCH_COSTS": [
+      3.0,
+      2.5
+    ],
+    "TEAM_MIN_DURATION": 30
+  },
+  "spellF1": 0.5875739644970415,
+  "macroF1": 0.8943934966973434,
+  "baseline": {
+    "settings": {
+      "CONTROL_RADIUS": 2.2,
+      "CONTROL_WEIGHT": 0.55,
+      "TIME_BLEND": 0.5,
+      "TEAM_SWITCH_COST": 7.0,
+      "DEAD_SWITCH_COSTS": [
+        3.0,
+        2.5
+      ],
+      "TEAM_MIN_DURATION": 15
+    },
+    "spellF1": 0.5384863123993558,
+    "macroF1": 0.8783532827638911
+  }
+}

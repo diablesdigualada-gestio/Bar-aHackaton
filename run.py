@@ -23,7 +23,7 @@ def build_states(match, events):
     """Whole pipeline after loading: features, evidence, decode. Returns int8 states."""
     ball, seen = ballmod.fill_gaps(match["ball"])
     speed = ballmod.speed(ball)
-    out = ballmod.out_of_pitch(ball)
+    out = ballmod.out_of_pitch(ball, pitch=match.get("pitch", config.PITCH))
 
     d_home, d_away = features.nearest_distance_per_team(ball, match["players"],
                                                         match["team_of_slot"])

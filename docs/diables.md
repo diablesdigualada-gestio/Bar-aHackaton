@@ -9,7 +9,7 @@ right on most frames but flickers scores almost nothing: the official nearest-pl
 macroF1 0.65 and spellF1 0.05. So the problem is not "who is closest to the ball on this frame",
 it is "segment the match into possessions and stoppages". We split it in two layers:
 
-1. **Evidence per frame**, from physics and football rules, with no training.
+1. **Evidence per frame**, from physics and football rules.
 2. **One global decoder** that turns that evidence into segments and refuses segments that are too
    short to be real possessions.
 
@@ -33,10 +33,11 @@ For every frame and team we compute two quantities:
 
 The control evidence is the product of three factors:
 
-- *close*: the nearest player of either team is within a control radius of 2.2 m (individual
-  possession studies use 1.5 to 2 m, Link and Hoernig 2017; we widen it for video tracking noise),
-- *slow*: the ball moves below 13 m/s, so it is at a player's feet and not travelling,
-- *who*: a blend of the distance gap and the arrival time gap between teams, saturated with tanh.
+- *close*: the nearest player of either team is within a control radius of 1.6 m.
+  Link and Hoernig (2017) report a range of 1.5 to 2 m for individual possession.
+- *slow*: the ball moves below 13 m/s, so it is at a player's feet and not travelling.
+- *who*: the distance gap between teams, saturated with tanh. The arrival-time blend is
+  available through `TIME_BLEND` and calibrated to zero.
 
 A ball in flight gives evidence to nobody. The decoder then keeps the possession with the team
 that played it, which is the challenge rule: passes, deflections that do not intercept and aerial
@@ -62,12 +63,11 @@ attacking team. Weak on purpose: they are phases, not possessions, and they are 
 
 ## 3. Decoder
 
-Three states, H, A, D. Each state is expanded into a left-to-right chain of substates (15 frames
-for H and A, 20 for D), the classical explicit-duration HMM construction. A state cannot be left
-before its chain is walked, so no possession or stoppage shorter than 0.6 s or 0.8 s can appear.
-Switching from one team to the other costs 7 units of log-score, entering or leaving D costs 2.5
-to 3. Viterbi finds the best segmentation of the whole match in one pass, about 3 seconds for
-199319 frames in plain numpy.
+Three states, H, A, D. Each state is expanded into a left-to-right chain of substates (30 frames
+for H and A, 20 for D), the classical explicit-duration HMM construction. A state must walk
+its chain before a transition, giving minimum durations of 1.2 s for possession and 0.8 s for
+stoppages. Switching between teams costs 7 units of log-score. Entering D costs 3
+and leaving D costs 2.5. Viterbi finds the best segmentation in one pass.
 
 Emissions: H gets +control, A gets -control, D gets the dead-ball score. During an occlusion
 everything is close to zero and the decoder simply stays in the current state.
@@ -92,20 +92,49 @@ everything is close to zero and the decoder simply stays in the current state.
 
 ## 6. Training data
 
-None. The method has no learned parameters. Every parameter is set from the literature cited
-above or from football common sense, and is listed with its source in `possession/config.py`.
-No hand labels on the provided game were produced or used. The public 5-minute ground truth was
-used only to check that the pipeline runs and the file validates, not to choose parameters.
+We calibrated six parameter groups against frame labels derived from the public Metrica Sports
+Sample Game 3 events. The pipeline still uses fixed rules and a fixed decoder. Other parameter
+values come from the literature or football heuristics and are documented in
+`possession/config.py`. The calibration used only the open sample match.
 
 ## 7. Limitations
 
-- The control radius and the switch costs are fixed by hand, not learned. A model trained on
-  open matches with event data (Metrica sample games, Sportec open data) is the obvious next step.
+- The grid search used one optical-tracking match with event-derived labels. The reported
+  scores measure fit to that match. Generalisation to other matches and video tracking
+  remains unmeasured.
+- The event file can leave restart gaps or place changes of control late. The label rules hold
+  D until a recognised restart and retain the current team between control events.
 - Tracking slots are tracklets, not people, so we cannot use per-player history (for instance,
   who touched the ball last before an occlusion beyond the current state).
 - The Smart Tagging time of the restart is approximated by the centre of the tagged interval.
 - Long ball occlusions during live play keep the previous possession; if the ball changed hands
   inside the occlusion the change is detected late.
+
+## Calibration
+
+`python tools/calibrate.py` scores 96 settings on all 143,761 frames of Metrica Sports
+Sample Game 3. The frame labels come from its public event data. Passes, carries, shots and controlled
+recoveries establish team possession. Stoppages persist until a tagged restart. The exact
+rules are in `event_labels` in `tools/calibrate.py`. Calibration used no challenge-match
+data. Every run used an empty Smart Tagging list. [Public sample files](https://github.com/metrica-sports/sample-data/tree/master/data/Sample_Game_3)
+
+| Parameter | Grid values |
+|---|---|
+| Control radius (m) | 1.6, 2.2, 3.0 |
+| Control weight | 0.55, 0.85 |
+| Time blend | 0.0, 0.5 |
+| H-to-A and A-to-H switch cost | 7.0, 18.0 |
+| Switch costs (into D, out of D) | (3.0, 2.5), (9.0, 8.0) |
+| Minimum H and A duration (frames) | 15, 30 |
+
+The grid ranks settings by mean spellF1 across IoUs 0.3 through 0.7, with macroF1 breaking
+ties. The minimum D duration stays at 20 frames.
+
+The winning setting used a 1.6 m radius, 0.85 control weight, 0.0 time blend,
+a team switch cost of 7, D switch costs of 3 in and 2.5 out, and a 30-frame
+H/A minimum. With the official scorer, spellF1 went from 0.5385 to 0.5876
+and macroF1 went from 0.8784 to 0.8944. The scores and settings are recorded in
+`tools/calibrated.json`.
 
 ## 8. Reproduction
 

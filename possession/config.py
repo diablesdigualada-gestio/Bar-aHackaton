@@ -4,7 +4,8 @@ Owner: Jordi.
 
 Every magic number lives here and only here. If one shows up inside another module, it gets moved
 back. Each value says where it comes from: the literature, football common sense, or something we
-measured by watching the video. None of them was fitted against the public 5-minute ground truth;
+measured by watching the video. Selected values were calibrated on the open Metrica sample.
+None of them was fitted against the public 5-minute ground truth;
 that window is used to check that the pipeline runs end to end and nothing else.
 """
 
@@ -29,19 +30,20 @@ BALL_SPEED_WINDOW = 5          # frames used to smooth ball speed
 
 # Ball control (Jordi)
 # Link and Hoernig (2017) use an influence radius of roughly 1.5 to 2 m for individual control.
-# Automatic video tracking is noisier than optical multi-camera systems, so we open it up a bit.
-CONTROL_RADIUS = 2.2           # metres
+# Original radius rationale: automatic video tracking is noisier than optical multi-camera
+# systems, so we open it up a bit.
+CONTROL_RADIUS = 1.6           # metres, calibrated on Metrica Sample Game 3
 CONTROL_SLOPE = 0.6            # metres, softness of the radius sigmoid
 CONTROL_SPEED = 13.0           # m/s, above this the ball is travelling and nobody controls it
 SPEED_SLOPE = 2.0              # m/s
 ADVANTAGE_SCALE = 1.5          # metres of distance gap between teams that saturates the evidence
-CONTROL_WEIGHT = 0.55          # per-frame evidence when one team clearly has the ball
+CONTROL_WEIGHT = 0.85          # per-frame evidence when one team clearly has the ball, calibrated on Metrica Sample Game 3
 
 # Time to ball (Jordi). Values from Spearman (2018): reaction 0.7 s, top speed 5 m/s.
 REACTION_TIME = 0.7            # seconds
 MAX_PLAYER_SPEED = 5.0         # m/s
 TIME_ADVANTAGE_SCALE = 0.4     # seconds of arrival gap that saturates the evidence
-TIME_BLEND = 0.5               # 0 = distance only, 1 = arrival time only
+TIME_BLEND = 0.0               # 0 = distance only, 1 = arrival time only, calibrated on Metrica Sample Game 3
 
 # Dead ball (Carles)
 STOPPAGE_PLAYER_SPEED = 1.6    # m/s team average: below this the game looks stopped
@@ -61,7 +63,7 @@ USE_PHASES = True
 
 # Viterbi (Jordi)
 # Minimum durations in frames. A possession shorter than 0.6 s is a rebound, not a possession.
-MIN_DURATION = {H: 15, A: 15, D: 20}
+MIN_DURATION = {H: 30, A: 30, D: 20}  # calibrated on Metrica Sample Game 3
 # Cost of switching state. Higher means fewer invented possessions, which spellF1 punishes hard.
 SWITCH_COST = {
     (H, A): 7.0, (A, H): 7.0,

@@ -7,10 +7,11 @@ For every frame of FC Barcelona vs Athletic Club we answer H (home in possession
 possession) or D (dead ball), using only the provided tracking (ATD) and Smart Tagging.
 
 Method in one paragraph: per frame, a physics model estimates how strongly each team controls the
-ball (distance and **time to reach the ball**, from the pitch control literature), and four
-independent signals score how likely the ball is dead. A **three-state explicit-duration HMM**
-decodes the whole match at once with Viterbi, so short flickers never become possessions. Full
-explanation in [docs/diables.md](docs/diables.md).
+ball (proximity, ball speed and the gap between teams; a time to reach the ball model from the
+pitch control literature is also implemented), and four independent signals score how likely the
+ball is dead. A **three-state explicit-duration HMM** decodes the whole match at once with Viterbi,
+so short flickers never become possessions. Parameters are **calibrated on Metrica's open sample
+game 3**, never on the challenge match. Full explanation in [docs/diables.md](docs/diables.md).
 
 ## Reproduce the submission
 
