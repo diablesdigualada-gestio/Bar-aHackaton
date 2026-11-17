@@ -15,7 +15,8 @@ game 3**, never on the challenge match. Full explanation in [docs/diables.md](do
 
 ## Reproduce the submission
 
-Python 3.9+ and numpy. Nothing else is needed for the submission file.
+Python 3.9+ and numpy (pinned in requirements.txt; the submission was made with Python 3.13 and
+numpy 2.2.5). Nothing else is needed for the submission file.
 
 ```bash
 pip install -r requirements.txt
@@ -49,15 +50,29 @@ H, A, D, H scenario.
 
 ## Viewer
 
-Nuxt 4 + Nuxt UI app to inspect the result: possession share, ball in play, possession strips
-per half and the list of spells.
+Nuxt 4 + Nuxt UI app that shows the result to any football fan: possession share, ball in
+play, a timeline per half, a pitch replay and the list of possessions, in match time.
 
 ```bash
 python run.py --team diables --viewer     # writes web/public/match.json (gitignored)
 cd web
-npm install
-npm run dev
+npm ci
+npm run dev                               # development, http://localhost:3000
 ```
+
+Production: write `match.json` first, then build, because the build copies `public/` into the
+output and precompresses it (gzip and brotli).
+
+```bash
+python run.py --team diables --viewer
+cd web
+npm ci
+npm run build
+node .output/server/index.mjs            # PORT=8080 to change the port
+```
+
+`npm run generate` gives a fully static site in `.output/public` for any static host instead.
+The page also has an "Open a match file" button, so the same build can show any `match.json`.
 
 ## Video check
 
