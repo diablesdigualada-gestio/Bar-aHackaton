@@ -14,6 +14,7 @@ Coordinates normalised 0..1, speed in m/s, NaN when missing. frame_id starts at 
 submission at 0, so video_frame = frame_id - 1.
 """
 
+import glob
 import os
 import xml.etree.ElementTree as ET
 
@@ -38,8 +39,17 @@ def paths(data_dir, game=config.GAME, source=config.SOURCE):
         "raw": base + "_atd.txt",
         "tagging": base + "_smart_tagging.xml",
         "homography": base + "_homography.csv",
-        "video": base + ".mp4",
+        "video": find_video(base),
     }
+
+
+def find_video(base):
+    """base.mp4, or the first base-*.mp4 when the download added a suffix (BAR-ATH_tactical-001.mp4)."""
+    exact = base + ".mp4"
+    if os.path.isfile(exact):
+        return exact
+    found = sorted(glob.glob(glob.escape(base) + "-*.mp4"))
+    return found[0] if found else exact
 
 
 def check_files(file_paths, required=("meta", "raw")):
