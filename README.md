@@ -49,6 +49,16 @@ python -m tests.test_synthetic
 Synthetic match, no real data: checks the raw reader, the minimum duration rule and a full
 H, A, D, H scenario.
 
+```bash
+python -m tests.test_edges
+```
+
+Failure paths and edge cases, also without real data: malformed submission files are refused
+before touching the disk, broken or out-of-range lines in the raw tracking, ball gaps that are too
+long or at the very start, frames with nobody tracked, flat evidence in the decoder, simulated
+dropouts never touching stoppages, the robust model never seeing ball visibility, and missing
+files reported by name. Each test was checked to fail when the guard it covers is removed.
+
 ## Viewer
 
 Nuxt 4 + Nuxt UI app that shows the result to any football fan: possession share, ball in
