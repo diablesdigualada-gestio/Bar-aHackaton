@@ -16,3 +16,4 @@ PENDENTS_*.txt
 
 # The submission CSV is copied into entregar/ for uploading, but stays out of the public repo
 entregar/*.csv
+!entregar/Fireware.pdf
