@@ -14,13 +14,13 @@ import time
 import numpy as np
 
 from possession import ball as ballmod
-from possession import config, deadball, features, loading, output, viterbi
+from possession import config, deadball, features, learned, loading, output, viterbi
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 
-def build_states(match, events):
-    """Whole pipeline after loading: features, evidence, decode. Returns int8 states."""
+def frame_features(match):
+    """Compute tracking features shared by both emission modes."""
     ball, seen = ballmod.fill_gaps(match["ball"])
     speed = ballmod.speed(ball)
     out = ballmod.out_of_pitch(ball, pitch=match.get("pitch", config.PITCH))
@@ -32,12 +32,35 @@ def build_states(match, events):
                                                     match["team_of_slot"], velocity)
     control = features.control_evidence(d_home, d_away, speed, t_home, t_away)
 
-    dead = deadball.dead_evidence(seen, out, features.mean_player_speed(match["speed"]),
-                                  features.active_players(match["players"]))
-    tag_dead, push = deadball.tagging_priors(events, match["names"], len(ball))
+    return {"control": control, "d_home": d_home, "d_away": d_away,
+            "t_home": t_home, "t_away": t_away, "ball_speed": speed, "out": out,
+            "mean_player_speed": features.mean_player_speed(match["speed"]),
+            "active_players": features.active_players(match["players"]), "seen": seen}
 
-    scores = viterbi.emissions(control, dead + tag_dead, push)
-    return viterbi.decode(scores)
+
+def hand_emissions(frame, tag_dead=0.0, push=0.0):
+    dead = deadball.dead_evidence(frame["seen"], frame["out"], frame["mean_player_speed"],
+                                  frame["active_players"])
+    return viterbi.emissions(frame["control"], dead + tag_dead, push)
+
+
+def build_states(match, events):
+    """Whole pipeline after loading: features, evidence, decode. Returns int8 states."""
+    frame = frame_features(match)
+    tag_dead, push = deadball.tagging_priors(events, match["names"], len(match["ball"]))
+
+    if config.EMISSIONS == "hand":
+        scores = hand_emissions(frame, tag_dead, push)
+        return viterbi.decode(scores, config.MIN_DURATION, config.SWITCH_COST)
+
+    if config.EMISSIONS == "learned":
+        scores = learned.log_probabilities(learned.feature_matrix(frame), learned.load())
+        scores[:, config.H] += push
+        scores[:, config.A] -= push
+        scores[:, config.D] += tag_dead
+        return viterbi.decode(scores, config.LEARNED_MIN_DURATION, config.LEARNED_SWITCH_COST)
+
+    raise ValueError("Unknown emission mode: {}".format(config.EMISSIONS))
 
 
 def main():

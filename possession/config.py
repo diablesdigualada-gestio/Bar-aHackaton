@@ -61,6 +61,21 @@ RESTART_TEAM_WEIGHT = 0.25
 PHASE_TEAM_WEIGHT = 0.03       # tagged phases (BUILD UP, PROGRESSION...) give a very weak push
 USE_PHASES = True
 
+# Emissions (Jordi)
+EMISSIONS = "hand"             # safer default, see docs/diables.md "Why hand emissions by default"
+# Upper bounds for distance (m), arrival time (s) and speed (m/s) features.
+LEARNED_CLIPS = {
+    "d_home": 25.0, "d_away": 25.0,
+    "t_home": 6.0, "t_away": 6.0,
+    "ball_speed": 40.0, "mean_player_speed": 8.0,
+}
+LEARNED_SCALE_FLOOR = 0.1     # avoid amplifying almost constant features
+LEARNED_SEED = 7
+LEARNED_INIT_SCALE = 0.01
+LEARNED_STEPS = 200
+LEARNED_STEP_SIZE = 0.2
+LEARNED_L2 = 0.01
+
 # Viterbi (Jordi)
 # Minimum durations in frames. A possession shorter than 0.6 s is a rebound, not a possession.
 MIN_DURATION = {H: 30, A: 30, D: 20}  # calibrated on Metrica Sample Game 3
@@ -69,4 +84,12 @@ SWITCH_COST = {
     (H, A): 7.0, (A, H): 7.0,
     (H, D): 3.0, (A, D): 3.0,
     (D, H): 2.5, (D, A): 2.5,
+}
+
+# Learned decoder settings ranked by mean training score across folds.
+LEARNED_MIN_DURATION = {H: 45, A: 45, D: 30}
+LEARNED_SWITCH_COST = {
+    (H, A): 18.0, (A, H): 18.0,
+    (H, D): 9.0, (A, D): 9.0,
+    (D, H): 8.0, (D, A): 8.0,
 }
