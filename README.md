@@ -12,6 +12,7 @@ pitch control literature is also implemented), and four independent signals scor
 ball is dead. A **three-state explicit-duration HMM** decodes the whole match at once with Viterbi,
 so short flickers never become possessions. Parameters are **calibrated on Metrica's open sample
 game 3**, never on the challenge match. Full explanation in [docs/diables.md](docs/diables.md).
+What we hand in and how it was checked: [docs/submission.md](docs/submission.md).
 
 ## Reproduce the submission
 
