@@ -1,5 +1,7 @@
 """Regenerate the submission from the provided data.
 
+Owner: Jordi.
+
     pip install -r requirements.txt
     python run.py --data data --team diables
 

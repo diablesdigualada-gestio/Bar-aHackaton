@@ -101,7 +101,7 @@ local.
 | `possession/config.py` | every parameter, with its source | Jordi |
 | `possession/deadball.py` | dead-ball evidence, tagging priors | Carles |
 | `possession/output.py` | submission writer, spells, viewer export | Carles |
-| `run.py` | end-to-end command | all |
+| `run.py` | end-to-end command | Jordi |
 | `tools/visualize.py` | video overlay clips and timeline | Roger |
 | `web/` | viewer | Carles |
 
